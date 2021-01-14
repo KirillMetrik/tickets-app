@@ -1,0 +1,11 @@
+<div>
+  <div>
+    Ticket: {{model.id}}, {{model.description}}
+  </div>
+  <div>
+    Status: 
+    <span [hidden]="model.completed" class="pending">pending</span>
+    <span [hidden]="!model.completed" class="completed">completed</span>
+  </div>
+  <a [routerLink]="['detail', model.id]">Details</a>
+</div>
