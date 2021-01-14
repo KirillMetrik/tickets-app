@@ -1,35 +1,24 @@
-import { Component, OnInit } from '@angular/core';
-import { Subject } from 'rxjs';
+import { AfterViewInit, Component } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import {BackendService, Ticket} from '../backend.service';
+import { BackendService, Ticket } from '../backend.service';
 
 @Component({
-  selector: 'ticket-list',
-  templateUrl: './ticket-list.component.html',
-  styleUrls: ['./ticket-list.component.less']
+    selector: 'ticket-list',
+    templateUrl: './ticket-list.component.html',
+    styleUrls: ['./ticket-list.component.less']
 })
-export class TicketListComponent implements OnInit {
-  private getTickets = new Subject<string>();
-  private _filter: string;
+export class TicketListComponent implements AfterViewInit {
 
-  tickets: Ticket[];
+    filterControl = new FormControl('');
+    tickets: Observable<Ticket[]>;
 
-  constructor(private backend: BackendService) {
-    this.getTickets.pipe(switchMap(filter => this.backend.tickets(filter)))
-      .subscribe(tickets=>{
-        this.tickets = tickets;
-      });
-  }
+    constructor(private backend: BackendService) {
+        this.tickets = this.filterControl.valueChanges.pipe(switchMap(filter => this.backend.tickets(filter)));
+    }
 
-  ngOnInit() {
-    this.getTickets.next();
-  }
-
-  get filter() {
-    return this._filter;
-  }
-  set filter(val) {
-    this._filter = val;
-    this.getTickets.next(val);
-  }
+    ngAfterViewInit() {
+        this.filterControl.setValue('');
+    }
 }
