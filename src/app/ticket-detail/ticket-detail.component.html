@@ -1,19 +1,25 @@
-<h2 *ngIf="isAdd">New Ticket</h2>
-<h2 *ngIf="!isAdd">Ticket Details</h2>
+<form [formGroup]="form" (ngSubmit)="submit()" *ngIf="ticket | async; else wait">
+    <h2 *ngIf="isAdd">New Ticket</h2>
+    <h2 *ngIf="!isAdd">Ticket Details</h2>
 
-Description: <input [attr.disabled]="!isAdd || null" type="text" [(ngModel)]="description"/><br /><br />
+    Description: <input [attr.disabled]="!isAdd || null" type="text" formControlName="description" /><br /><br />
 
-Assignee: 
-<select [(ngModel)]="assigneeId">
-  <option *ngFor="let user of users|async" [value]="user.id">{{user.name}}</option>
-</select>
-<br /><br />
+    Assignee:
+    <select formControlName="assigneeId">
+        <option *ngFor="let user of users|async" [value]="user.id">{{user.name}}</option>
+    </select>
+    <br /><br />
 
-<input type="checkbox" [attr.disabled]="isAdd || null" id="isCompleted" [(ngModel)]="isCompleted" />
-<label for="isCompleted">completed</label>
-<br /><br />
+    <input type="checkbox" [attr.disabled]="isAdd || null" id="completed" formControlName="completed" />
+    <label for="completed">completed</label>
+    <br /><br />
 
-<button [attr.disabled]="isBusy || null" (click)="submit()">Submit</button>
-&nbsp;<button [attr.disabled]="isBusy || null" routerLink="/">Cancel</button>
-<br />
-<span [hidden]="!isBusy">please wait...</span>
+    <button [attr.disabled]="isBusy || null" type="submit">Submit</button>
+    &nbsp;<button [attr.disabled]="isBusy || null" routerLink="/">Cancel</button>
+    <br />
+    <span [hidden]="!isBusy">please wait...</span>
+</form>
+
+<ng-template #wait>
+    please wait...
+</ng-template>

@@ -1,11 +1,17 @@
 <h2>Tickets</h2>
 
-Filter: <input type="text" [formControl]="filterControl" />
+<div *ngIf="tickets | async as ticketsVal; else wait">
+    Filter: <input type="text" [formControl]="filterControl" />
 
-<ul>
-  <li *ngFor="let t of tickets | async">
-    <ticket [model]="t"></ticket>
-  </li>
-</ul>
+    <ul>
+        <li *ngFor="let t of ticketsVal">
+            <ticket [model]="t"></ticket>
+        </li>
+    </ul>
 
-<button routerLink="add">New Ticket</button>
+    <button routerLink="add">New Ticket</button>
+</div>
+
+<ng-template #wait>
+    please wait...
+</ng-template>

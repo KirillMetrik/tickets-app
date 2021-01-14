@@ -1,84 +1,81 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, Subscription } from 'rxjs';
-import { finalize, map } from 'rxjs/operators';
-import { BackendService } from '../backend.service';
+import { forkJoin, Observable, Subscription } from 'rxjs';
+import { finalize, flatMap, take, tap } from 'rxjs/operators';
+import { BackendService, Ticket } from '../backend.service';
 
 @Component({
-  selector: 'ticket-detail',
-  templateUrl: './ticket-detail.component.html',
-  styleUrls: ['./ticket-detail.component.less']
+    selector: 'ticket-detail',
+    templateUrl: './ticket-detail.component.html',
+    styleUrls: ['./ticket-detail.component.less']
 })
 export class TicketDetailComponent implements OnInit, OnDestroy {
-  private subscrSubmit: Subscription;
-  private subscrParams: Subscription;
-  private subscrGet: Subscription;
+    private subscrSubmit: Subscription;
 
-  id: number;
-  description: string;
-  assigneeId: number;
-  isCompleted: boolean;
-  isBusy = false;
-
-  users = this.backend.users();
-
-  constructor(
-    private backend: BackendService,
-    private router: Router,
-    private route: ActivatedRoute) {}
-
-  get isAdd() {
-    return this.id == null;
-  }
-
-  ngOnInit() {
-    this.subscrParams = this.route.params.subscribe(params=>{
-      this.id = params['id'];
-      if(!this.isAdd) {
-        this.isBusy = true;
-        this.subscrGet = this.backend.ticket(this.id)
-          .pipe(finalize(()=>this.isBusy=false))
-          .subscribe(t=>{
-            this.description = t.description;
-            this.assigneeId = t.assigneeId;
-            this.isCompleted = t.completed;
-        });
-      }
+    form = this.formBuilder.group({
+        'description': [],
+        'assigneeId': [],
+        'completed': []
     });
-  }
 
-  submit(){
-    if(this.isBusy) {
-      return;
+    id: number;
+    isBusy = false;
+    ticket: Observable<Ticket>;
+
+    users = this.backend.users();
+
+    constructor(
+        private backend: BackendService,
+        private formBuilder: FormBuilder,
+        private router: Router,
+        private route: ActivatedRoute) { }
+
+    get isAdd() {
+        return this.id == null;
     }
 
-    this.isBusy = true;
-    const fn = (this.isAdd ? this.addTicket : this.updateTicket).bind(this);
-    this.subscrSubmit = fn()
-      .pipe(finalize(()=>this.isBusy=false))
-      .subscribe(()=>{
-        this.isBusy = false;
-        this.router.navigate(['/'])
-    });
-  }
+    ngOnInit() {
+        this.ticket = this.route.params.pipe(
+            take(1),
+            flatMap(p => {
+                this.id = p['id'];
+                return this.isAdd ? null : this.backend.ticket(this.id);
+            }),
+            tap(t => this.form.patchValue(t))
+        );
+    }
 
-  ngOnDestroy() {
-    this.subscrSubmit?.unsubscribe();
-    this.subscrParams?.unsubscribe();
-    this.subscrGet?.unsubscribe();
-  }
+    submit() {
+        if (this.isBusy) {
+            return;
+        }
 
-  addTicket() {
-    return this.backend.newTicket({
-      description: this.description,
-      assigneeId: this.assigneeId
-    });
-  }
+        this.isBusy = true;
+        const fn = (this.isAdd ? this.addTicket : this.updateTicket).bind(this);
+        this.subscrSubmit = fn()
+            .pipe(finalize(() => this.isBusy = false))
+            .subscribe(() => {
+                this.isBusy = false;
+                this.router.navigate(['/'])
+            });
+    }
 
-  updateTicket() {
-    return forkJoin({
-      assign: this.backend.assign(this.id, this.assigneeId),
-      complete: this.backend.complete(this.id, this.isCompleted)
-    });
-  }
+    ngOnDestroy() {
+        this.subscrSubmit?.unsubscribe();
+    }
+
+    addTicket() {
+        return this.backend.newTicket({
+            description: this.form.controls.description.value,
+            assigneeId: this.form.controls.assigneeId.value
+        });
+    }
+
+    updateTicket() {
+        return forkJoin({
+            assign: this.backend.assign(this.id, this.form.controls.assigneeId.value),
+            complete: this.backend.complete(this.id, this.form.controls.completed.value)
+        });
+    }
 }
