@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, Observable, Subscription } from 'rxjs';
+import { forkJoin, Observable, of, Subscription } from 'rxjs';
 import { finalize, flatMap, take, tap } from 'rxjs/operators';
 import { BackendService, Ticket } from '../backend.service';
 
@@ -20,10 +20,15 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
     });
 
     id: number;
+    title: string;
     isBusy = false;
     ticket: Observable<Ticket>;
 
     users = this.backend.users();
+
+    get isAdd() {
+        return this.id == null;
+    }
 
     constructor(
         private backend: BackendService,
@@ -31,16 +36,13 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
         private router: Router,
         private route: ActivatedRoute) { }
 
-    get isAdd() {
-        return this.id == null;
-    }
-
     ngOnInit() {
         this.ticket = this.route.params.pipe(
             take(1),
             flatMap(p => {
                 this.id = p['id'];
-                return this.isAdd ? null : this.backend.ticket(this.id);
+                this.title = this.isAdd ? 'New Ticket' : 'Ticket Details';
+                return this.isAdd ? of(<Ticket>{}) : this.backend.ticket(this.id);
             }),
             tap(t => this.form.patchValue(t))
         );

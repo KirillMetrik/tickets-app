@@ -1,6 +1,5 @@
 <form [formGroup]="form" (ngSubmit)="submit()" *ngIf="ticket | async; else wait">
-    <h2 *ngIf="isAdd">New Ticket</h2>
-    <h2 *ngIf="!isAdd">Ticket Details</h2>
+    <h2>{{title}}</h2>
 
     Description: <input [attr.disabled]="!isAdd || null" type="text" formControlName="description" /><br /><br />
 

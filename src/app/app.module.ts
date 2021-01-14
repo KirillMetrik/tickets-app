@@ -6,7 +6,7 @@ import { TicketComponent } from './ticket/ticket.component';
 import { RouterModule } from '@angular/router';
 import { routes } from './routes';
 import { TicketListComponent } from './ticket-list/ticket-list.component';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TicketDetailComponent } from './ticket-detail/ticket-detail.component';
 
@@ -20,7 +20,6 @@ import { TicketDetailComponent } from './ticket-detail/ticket-detail.component';
     imports: [
         BrowserModule,
         CommonModule,
-        FormsModule,
         ReactiveFormsModule,
         RouterModule.forRoot(routes)
     ],
